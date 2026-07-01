@@ -100,7 +100,10 @@
 
   // ---- render -----------------------------------------------------------
   const svg = document.getElementById("chart");
-  svg.setAttribute("viewBox", `0 0 ${SIZE} ${SIZE}`);
+  // crop the empty ring around the outermost flags so the bracket fills more
+  const M = RADII[0] + LEAF_R + 8; // half-extent: reach of the outer flag ring
+  const vb = CX - M;
+  svg.setAttribute("viewBox", `${vb} ${vb} ${M * 2} ${M * 2}`);
 
   const defs = el("defs", {});
   const grad = el("radialGradient", { id: "glow" });
