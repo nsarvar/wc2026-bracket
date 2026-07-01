@@ -15,6 +15,7 @@ window.WORLD_CUP = {
   title: "FIFA World Cup 2026 — Knockout Stage",
 
   teams: [
+    { name: "Paraguay",             code: "py" },
     { name: "Germany",              code: "de" },
     { name: "Brazil",               code: "br" },
     { name: "Japan",                code: "jp" },
@@ -45,16 +46,28 @@ window.WORLD_CUP = {
     { name: "Canada",               code: "ca" },
     { name: "South Africa",         code: "za" },
     { name: "Sweden",               code: "se" },
-    { name: "France",               code: "fr" },
-    { name: "Paraguay",             code: "py" }
+    { name: "France",               code: "fr" }
   ],
 
   /*
-   * OPTIONAL: highlight a team's run through the bracket (like the white
-   * "Canada" path in the reference image). List team names that have advanced.
-   * A connector lights up only when exactly one of its two feeders is a winner.
+   * Match results. Each entry is a team that WON a match, with that match's
+   * score. The winner's flag advances inward to the next junction and its path
+   * lights up (white); the loser's flag goes dark.
+   *
+   * IMPORTANT: list a team once PER ROUND it wins, in round order. The number
+   * of entries = how many rounds it advanced.
+   *   { name: "Canada", score: "1-0" }        // won Round of 32
+   *   { name: "Canada", score: "2-1" }        // ...then won Round of 16, etc.
+   *   { name: "Paraguay", score: "1-1 (4-2 p)" }   // p = won on penalties
+   * A plain string ("Canada") also works if you don't want a score shown.
    */
   winners: [
-    // "Canada"
+    { name: "Paraguay", score: "1-1 (4-2 p)" }, // over Germany
+    { name: "Brazil",   score: "2-1" },         // over Japan
+    { name: "Norway",   score: "2-1" },         // over Côte d'Ivoire
+    { name: "Mexico",   score: "2-0" },         // over Ecuador
+    { name: "Canada",   score: "1-0" },         // over South Africa
+    { name: "France",   score: "3-0" },         // over Sweden
+    { name: "Morocco",  score: "1-1 (3-2 p)" }  // over Netherlands
   ]
 };
