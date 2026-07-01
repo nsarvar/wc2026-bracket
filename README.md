@@ -61,10 +61,39 @@ winners: [
 ]
 ```
 
-**Score order:** write the score in *matchup order* — the two teams as they sit
-next to each other around the circle, the earlier one (clockwise from the top)
-first. So Sweden vs France where France won is `"0-3"`. A plain string
+**Score order:** write the **winner's** goals first (`"3-0"`, penalties
+`"1-1 (4-2)"`). The chart automatically flips it to read in matchup order around
+the circle, so you don't have to think about left/right. A plain string
 (`"Canada"`) also works if you don't want a score shown.
+
+## Live results (optional)
+
+Instead of editing results by hand, the chart can fetch live winners on load
+from a small **Cloudflare Worker** that proxies [football-data.org](https://www.football-data.org).
+The API key stays server-side; the site stays static on GitHub Pages; results
+are cached at the edge (~3 min). If the proxy is unreachable, the chart falls
+back to the static `winners` in `data.js`.
+
+**Setup (one time):**
+
+1. Get a free API token at
+   <https://www.football-data.org/client/register>.
+2. Deploy the Worker:
+   ```bash
+   cd worker
+   npx wrangler deploy
+   npx wrangler secret put FD_TOKEN   # paste your token
+   ```
+   Wrangler prints a URL like `https://wc2026-results.<you>.workers.dev`.
+3. Put that URL in [`data.js`](data.js) → `resultsProxy: "https://…workers.dev"`,
+   commit, and push.
+
+How it maps: the Worker returns finished knockout matches (winner + score); the
+page matches each winner name to a bracket team. If the API spells a country
+differently, add it to the `ALIASES` map in [`bracket.js`](bracket.js) (unmatched
+winners are logged to the browser console).
+
+The proxy code lives in [`worker/`](worker/).
 
 ## Deploy to GitHub Pages
 
@@ -80,10 +109,12 @@ public for free Pages.)
 ## Project structure
 
 ```
-index.html    markup + footer
-styles.css    theme, flags, dimming, layout
-data.js       teams + results  ← edit this
-bracket.js    SVG renderer (geometry, advancement, drawing)
+index.html          markup + footer
+styles.css          theme, flags, dimming, layout
+data.js             teams + results + proxy URL  ← edit this
+bracket.js          SVG renderer (geometry, advancement, live-results fetch)
+worker/index.js     Cloudflare Worker proxy (hides API key, caches, CORS)
+worker/wrangler.toml Worker config
 ```
 
 ## Credits

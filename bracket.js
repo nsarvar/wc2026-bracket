@@ -7,19 +7,64 @@
   const CFG = window.WORLD_CUP || { teams: [], winners: [] };
   const teams = CFG.teams || [];
 
-  // Winners can be listed once per round a team wins. The NUMBER of times a
-  // team appears = how many rounds it has advanced; each entry's score is that
-  // round's result. So a team that won R32 then R16 appears twice.
-  const winCount = {}; // name -> rounds won
-  const scoreList = {}; // name -> [score for round 1, round 2, ...]
-  for (const w of CFG.winners || []) {
-    const name = typeof w === "string" ? w : w && w.name;
-    if (!name) continue;
-    const score = typeof w === "object" && w.score ? w.score : null;
-    winCount[name] = (winCount[name] || 0) + 1;
-    (scoreList[name] = scoreList[name] || []).push(score);
+  // ---- live results (optional) -----------------------------------------
+  // If CFG.resultsProxy is set, fetch live winners from the Cloudflare Worker
+  // proxy and render those; otherwise fall back to the static CFG.winners.
+  const norm = (s) =>
+    (s || "")
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+  const ALIASES = {
+    ivorycoast: "Côte d'Ivoire",
+    cotedivoire: "Côte d'Ivoire",
+    congodr: "DR Congo",
+    drcongo: "DR Congo",
+    democraticrepublicofcongo: "DR Congo",
+    usa: "United States",
+    unitedstatesofamerica: "United States",
+    caboverde: "Cape Verde",
+    capeverdeislands: "Cape Verde",
+    bosniaandherzegovina: "Bosnia & Herzegovina",
+  };
+
+  function mapResults(results) {
+    const byNorm = new Map();
+    for (const t of teams) byNorm.set(norm(t.name), t.name);
+    for (const [k, v] of Object.entries(ALIASES))
+      if (!byNorm.has(k)) byNorm.set(k, v);
+    const overrides = CFG.scoreOverrides || {};
+    const seen = {}; // count wins per team, to index per-round overrides
+    const out = [];
+    for (const r of results || []) {
+      const name = byNorm.get(norm(r.winner));
+      if (!name) continue;
+      let score = r.score || null;
+      const ov = overrides[name];
+      if (ov != null) {
+        score = Array.isArray(ov) ? ov[seen[name] || 0] ?? score : ov;
+      }
+      seen[name] = (seen[name] || 0) + 1;
+      out.push({ name, score });
+    }
+    return out;
   }
-  const roundsWon = (name) => winCount[name] || 0;
+
+  async function resolveWinners() {
+    const url = CFG.resultsProxy;
+    if (!url) return CFG.winners || [];
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("proxy " + res.status);
+      const data = await res.json();
+      const mapped = mapResults(data.results);
+      return mapped.length ? mapped : CFG.winners || [];
+    } catch (e) {
+      console.warn("Live results unavailable, using static data:", e.message);
+      return CFG.winners || [];
+    }
+  }
 
   // ---- geometry ---------------------------------------------------------
   const SIZE = 1000;
@@ -39,6 +84,22 @@
     return node;
   };
 
+  // ---- render (called once winners are resolved) -----------------------
+  function render(winnersList) {
+    // Winners can be listed once per round a team wins. The NUMBER of entries
+    // for a team = how many rounds it advanced; each entry's score is that
+    // round's result.
+    const winCount = {};
+    const scoreList = {};
+    for (const w of winnersList || []) {
+      const name = typeof w === "string" ? w : w && w.name;
+      if (!name) continue;
+      const score = typeof w === "object" && w.score ? w.score : null;
+      winCount[name] = (winCount[name] || 0) + 1;
+      (scoreList[name] = scoreList[name] || []).push(score);
+    }
+    const roundsWon = (name) => winCount[name] || 0;
+
   // ---- validate & build the tree ---------------------------------------
   const n = teams.length;
   if (n < 2 || (n & (n - 1)) !== 0) {
@@ -50,12 +111,22 @@
   }
 
   const step = 360 / n;
-  let level = teams.map((t, i) => ({
-    angle: -90 + i * step,
-    r: RADII[0],
-    level: 0,
-    team: t,
-  }));
+  // The Round-of-16 pairings straddle the top seam: (Sweden,France) is a
+  // sibling of (Paraguay,Germany), so France's winner plays Paraguay's winner.
+  // Shift the tree grouping by one match (two leaves) so siblings line up, while
+  // each flag keeps its real circle angle. Positions stay monotonic (no modulo)
+  // so parent angles average cleanly across the seam; polar() wraps at render.
+  const GROUP_OFFSET = 2 % n;
+  let level = [];
+  for (let k = 0; k < n; k++) {
+    const pos = n - GROUP_OFFSET + k;
+    level.push({
+      angle: -90 + pos * step,
+      r: RADII[0],
+      level: 0,
+      team: teams[pos % n],
+    });
+  }
   const levels = [level];
   let li = 1;
   while (level.length > 1) {
@@ -216,6 +287,13 @@
       if (!node.decided || node.r === 0) continue;
       drawFlag(node, NODE_R, { dim: node.eliminated, advanced: true });
       if (node.score) {
+        // scores are stored winner-first; if the winner is the second (later,
+        // clockwise) team of the pair, flip the digits so the score reads in
+        // matchup order as the two flags sit around the circle
+        const flip = node.winnerChild === node.children[1];
+        const scoreText = flip
+          ? node.score.replace(/(\d+)\s*-\s*(\d+)/g, "$2-$1")
+          : node.score;
         const sp = polar(node.angle, node.r + NODE_R + 16);
         // orient the score along the ring (tangent to the circle), flipping
         // whenever it would otherwise read upside down
@@ -227,7 +305,7 @@
           y: sp.y,
           transform: `rotate(${rot} ${sp.x} ${sp.y})`,
         });
-        t.textContent = node.score;
+        t.textContent = scoreText;
         gScores.appendChild(t);
       }
     }
@@ -244,4 +322,17 @@
 
   const h = document.getElementById("title");
   if (h && CFG.title) h.textContent = CFG.title;
+  } // end render()
+
+  // ---- bootstrap --------------------------------------------------------
+  // Render immediately with static data so the bracket paints instantly, then
+  // (if a proxy is configured) refresh with live results when they arrive.
+  render(CFG.winners || []);
+  if (CFG.resultsProxy) {
+    resolveWinners().then((winners) => {
+      const svg = document.getElementById("chart");
+      if (svg) svg.replaceChildren(); // clear the initial paint
+      render(winners);
+    });
+  }
 })();

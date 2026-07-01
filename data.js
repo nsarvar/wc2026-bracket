@@ -14,6 +14,22 @@
 window.WORLD_CUP = {
   title: "FIFA World Cup 2026 — Knockout Stage",
 
+  /*
+   * OPTIONAL live results. Paste your Cloudflare Worker proxy URL here and the
+   * chart will fetch live winners on load (falling back to the static `winners`
+   * below if the proxy is unreachable). Leave "" to use only the static data.
+   * See worker/ and the README for how to deploy the proxy.
+   */
+  resultsProxy: "https://wc2026-results.sarvar-nishonboyev.workers.dev/",
+
+  /*
+   * Escape hatch to correct a score the live feed reports wrong. Keyed by the
+   * WINNER's name, winner-first score (e.g. "Morocco": "1-1 (3-2)"); use an
+   * array ["r1", "r2"] if the team wins multiple rounds. Usually empty — the
+   * proxy handles regulation + shootout scores correctly.
+   */
+  scoreOverrides: {},
+
   teams: [
     { name: "Paraguay",             code: "py" },
     { name: "Germany",              code: "de" },
@@ -59,19 +75,23 @@ window.WORLD_CUP = {
    *   { name: "Canada", score: "1-0" }        // won Round of 32
    *   { name: "Canada", score: "2-1" }        // ...then won Round of 16, etc.
    *
-   * SCORE ORDER: write the score in matchup order — the two teams as they sit
-   * next to each other around the circle, the earlier one (going clockwise from
-   * the top) first. So Sweden vs France where France won is "0-3". Penalties go
-   * the same way, e.g. Paraguay beat Germany "1-1 (4-2)".
+   * SCORE ORDER: write the WINNER's goals first ("3-0", penalties "1-1 (4-2)").
+   * The chart automatically re-orients each score to the matchup as it reads
+   * around the circle, so you don't have to think about left/right.
    * A plain string ("Canada") also works if you don't want a score shown.
+   *
+   * The block between AUTO:START / AUTO:END is rewritten by
+   * scripts/update-results.mjs (the GitHub Action). Hand-editing is fine too.
    */
   winners: [
-    { name: "Paraguay", score: "1-1 (4-2)" },   // over Germany
-    { name: "Brazil",   score: "2-1" },         // over Japan
-    { name: "Norway",   score: "1-2" },         // Côte d'Ivoire 1–2 Norway
-    { name: "Mexico",   score: "2-0" },         // over Ecuador
-    { name: "Canada",   score: "1-0" },         // over South Africa
-    { name: "France",   score: "0-3" },         // Sweden 0–3 France
-    { name: "Morocco",  score: "1-1 (3-2)" }    // over Netherlands
+    /* AUTO:START */
+    { name: "Paraguay", score: "1-1 (4-2)" }, // beat Germany
+    { name: "Brazil",   score: "2-1" },       // beat Japan
+    { name: "Norway",   score: "2-1" },       // beat Côte d'Ivoire
+    { name: "Mexico",   score: "2-0" },       // beat Ecuador
+    { name: "Canada",   score: "1-0" },       // beat South Africa
+    { name: "France",   score: "3-0" },       // beat Sweden
+    { name: "Morocco",  score: "1-1 (3-2)" }, // beat Netherlands
+    /* AUTO:END */
   ]
 };
