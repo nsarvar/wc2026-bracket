@@ -62,12 +62,12 @@ window.WORLD_CUP = {
    * A plain string ("Canada") also works if you don't want a score shown.
    */
   winners: [
-    { name: "Paraguay", score: "1-1 (4-2 p)" }, // over Germany
+    { name: "Paraguay", score: "1-1 (4-2)" },   // over Germany
     { name: "Brazil",   score: "2-1" },         // over Japan
     { name: "Norway",   score: "2-1" },         // over Côte d'Ivoire
     { name: "Mexico",   score: "2-0" },         // over Ecuador
     { name: "Canada",   score: "1-0" },         // over South Africa
     { name: "France",   score: "3-0" },         // over Sweden
-    { name: "Morocco",  score: "1-1 (3-2 p)" }  // over Netherlands
+    { name: "Morocco",  score: "1-1 (3-2)" }    // over Netherlands
   ]
 };

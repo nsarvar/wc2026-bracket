@@ -214,7 +214,16 @@
       drawFlag(node, NODE_R, { dim: node.eliminated, advanced: true });
       if (node.score) {
         const sp = polar(node.angle, node.r + NODE_R + 16);
-        const t = el("text", { class: "score", x: sp.x, y: sp.y });
+        // orient the score along the ring (tangent to the circle), flipping
+        // whenever it would otherwise read upside down
+        let rot = (((node.angle + 90) % 360) + 360) % 360;
+        if (rot > 90 && rot < 270) rot += 180;
+        const t = el("text", {
+          class: "score",
+          x: sp.x,
+          y: sp.y,
+          transform: `rotate(${rot} ${sp.x} ${sp.y})`,
+        });
         t.textContent = node.score;
         gScores.appendChild(t);
       }
