@@ -58,16 +58,20 @@ window.WORLD_CUP = {
    * of entries = how many rounds it advanced.
    *   { name: "Canada", score: "1-0" }        // won Round of 32
    *   { name: "Canada", score: "2-1" }        // ...then won Round of 16, etc.
-   *   { name: "Paraguay", score: "1-1 (4-2 p)" }   // p = won on penalties
+   *
+   * SCORE ORDER: write the score in matchup order — the two teams as they sit
+   * next to each other around the circle, the earlier one (going clockwise from
+   * the top) first. So Sweden vs France where France won is "0-3". Penalties go
+   * the same way, e.g. Paraguay beat Germany "1-1 (4-2)".
    * A plain string ("Canada") also works if you don't want a score shown.
    */
   winners: [
     { name: "Paraguay", score: "1-1 (4-2)" },   // over Germany
     { name: "Brazil",   score: "2-1" },         // over Japan
-    { name: "Norway",   score: "2-1" },         // over Côte d'Ivoire
+    { name: "Norway",   score: "1-2" },         // Côte d'Ivoire 1–2 Norway
     { name: "Mexico",   score: "2-0" },         // over Ecuador
     { name: "Canada",   score: "1-0" },         // over South Africa
-    { name: "France",   score: "3-0" },         // over Sweden
+    { name: "France",   score: "0-3" },         // Sweden 0–3 France
     { name: "Morocco",  score: "1-1 (3-2)" }    // over Netherlands
   ]
 };
