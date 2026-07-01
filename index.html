@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>World Cup 2026 — Knockout Bracket</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=6" />
   </head>
   <body>
     <div class="wrap">
@@ -24,7 +24,8 @@
       </footer>
     </div>
 
-    <script src="data.js"></script>
-    <script src="bracket.js"></script>
+    <!-- bump ?v= on each deploy to bypass CDN/browser cache -->
+    <script src="data.js?v=6"></script>
+    <script src="bracket.js?v=6"></script>
   </body>
 </html>

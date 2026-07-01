@@ -111,15 +111,17 @@
   }
 
   const step = 360 / n;
-  // The Round-of-16 pairings straddle the top seam: (Sweden,France) is a
-  // sibling of (Paraguay,Germany), so France's winner plays Paraguay's winner.
-  // Shift the tree grouping by one match (two leaves) so siblings line up, while
-  // each flag keeps its real circle angle. Positions stay monotonic (no modulo)
-  // so parent angles average cleanly across the seam; polar() wraps at render.
-  const GROUP_OFFSET = 2 % n;
+  // Where the bracket tree starts in the circular team order. The final's spine
+  // sits just BEFORE this leaf, so with the WC 2026 field the split lands
+  // between Germany and Brazil at the top — matching the reference. This makes
+  // the groupings nest correctly: (Sweden,France) is a Round-of-16 sibling of
+  // (Paraguay,Germany), and the Brazil/Norway winner meets the Mexico/England
+  // winner in the quarterfinal. Positions stay monotonic (no modulo) so parent
+  // angles average cleanly across the seam; polar() wraps at render time.
+  const TREE_START = 2 % n;
   let level = [];
   for (let k = 0; k < n; k++) {
-    const pos = n - GROUP_OFFSET + k;
+    const pos = TREE_START + k;
     level.push({
       angle: -90 + pos * step,
       r: RADII[0],
