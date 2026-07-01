@@ -109,3 +109,20 @@ h1 {
 }
 
 .trophy { font-size: 62px; text-anchor: middle; dominant-baseline: central; }
+
+.credits {
+  margin-top: 20px;
+  text-align: center;
+  color: #9a9aa2;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.credits p { margin: 2px 0; }
+.credits .made-by { letter-spacing: 0.03em; }
+.credits a {
+  color: var(--gold);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.credits a:hover { color: #ffdd8a; text-decoration: underline; }
+.credits .sep { color: #4a4a52; margin: 0 6px; }
