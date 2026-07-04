@@ -289,10 +289,12 @@
       if (!node.decided || node.r === 0) continue;
       drawFlag(node, NODE_R, { dim: node.eliminated, advanced: true });
       if (node.score) {
-        // scores are stored winner-first; if the winner is the second (later,
-        // clockwise) team of the pair, flip the digits so the score reads in
-        // matchup order as the two flags sit around the circle
-        const flip = node.winnerChild === node.children[1];
+        // scores are stored winner-first. Show the LEFT-hand flag's goals first
+        // so the score reads naturally left-to-right anywhere on the ring: flip
+        // when the winner sits to the right of the loser (larger x = larger cos).
+        const cosW = Math.cos((node.winnerChild.angle * Math.PI) / 180);
+        const cosL = Math.cos((node.loserChild.angle * Math.PI) / 180);
+        const flip = cosW > cosL;
         const scoreText = flip
           ? node.score.replace(/(\d+)\s*-\s*(\d+)/g, "$2-$1")
           : node.score;
